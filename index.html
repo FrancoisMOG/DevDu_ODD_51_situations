@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activité ODD - Classement</title>
+
+<style>
+:root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --bg: #f0f2f5;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg);
+    margin: 0;
+    padding: 6px;
+    font-size: 12px;
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary);
+    font-size: 1.2em;
+    margin: 4px 0;
+}
+
+.main-layout {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.odd-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#pool-container {
+    flex: 1.1;
+    background: #fff;
+    padding: 6px;
+    border-radius: 8px;
+    border: 2px solid var(--accent);
+    height: 78vh;
+    overflow: hidden;
+}
+
+.situation {
+    background: #ffffff;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #dcdde1;
+    margin-bottom: 4px;
+    cursor: grab;
+    line-height: 1.2;
+    font-size: 11px;
+}
+
+.odd-drop-zone {
+    background: #fff;
+    border: 1px dashed #bdc3c7;
+    border-radius: 6px;
+    padding: 4px;
+    min-height: 48px;
+}
+
+.odd-title {
+    font-weight: bold;
+    font-size: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 2px;
+}
+
+.correct {
+    background: #dff9fb !important;
+    border: 1px solid #27ae60 !important;
+    cursor: default;
+    opacity: 0.8;
+    font-size: 10px;
+}
+
+.success-message {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+}
+
+.success-message > div {
+    background: #27ae60;
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    margin: 20% auto;
+    text-align: center;
+}
+
+/* Bouton consigne */
+#help-btn {
+    position: fixed;
+    top: 8px;
+    right: 10px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Fenêtre consigne */
+#help-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+#help-content {
+    background: white;
+    width: 360px;
+    padding: 16px;
+    border-radius: 10px;
+    margin: 20% auto;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<button id="help-btn">?</button>
+
+<h1>Classe les situations dans le bon Objectif de Développement Durable</h1>
+
+<div class="main-layout">
+    <div class="odd-column" id="col-left"></div>
+
+    <div id="pool-container">
+        <h3 style="text-align:center;margin:4px 0;font-size:12px;">Situations à trier</h3>
+        <div id="situations-pool"></div>
+    </div>
+
+    <div class="odd-column" id="col-right"></div>
+</div>
+
+<div id="win-screen" class="success-message">
+    <div>
+        <h2>🎉 Bravo !</h2>
+        <p>Toutes les situations sont correctement classées.</p>
+        <button onclick="location.reload()">Rejouer</button>
+    </div>
+</div>
+
+<div id="help-modal">
+    <div id="help-content">
+        <h3>Consigne</h3>
+        <p>
+            Lis chaque situation.<br>
+            Glisse-la dans l’Objectif de Développement Durable qui te semble le plus adapté.<br>
+            Une situation ne peut appartenir qu’à un seul ODD.
+        </p>
+        <button onclick="closeHelp()">Fermer</button>
+    </div>
+</div>
+
+<script>
+const data = [
+{ id:1, name:"ODD 1 – Pas de pauvreté", situations:["Famille sans revenus stables","Difficulté à payer le loyer","Absence d’aides sociales"]},
+{ id:2, name:"ODD 2 – Faim Zéro", situations:["Repas insuffisants chaque jour","Récoltes perdues par la sécheresse","Manque de nourriture à l’école"]},
+{ id:3, name:"ODD 3 – Santé", situations:["Accès limité aux soins","Manque de vaccins","Stress et dépression non suivis"]},
+{ id:4, name:"ODD 4 – Éducation", situations:["Manque de matériel scolaire","Enfants quittant l’école tôt","Salles de classe surchargées"]},
+{ id:5, name:"ODD 5 – Égalité femmes-hommes", situations:["Salaire inférieur à poste égal","Peu de femmes dirigeantes","Accès limité aux droits"]},
+{ id:6, name:"ODD 6 – Eau", situations:["Eau non potable","Manque de toilettes","Rivières polluées"]},
+{ id:7, name:"ODD 7 – Énergie", situations:["Logements sans électricité","Usage de combustibles polluants","Peu d’énergies renouvelables"]},
+{ id:8, name:"ODD 8 – Travail", situations:["Travail dangereux","Chômage des jeunes","Horaires abusifs"]},
+{ id:9, name:"ODD 9 – Industrie", situations:["Routes dégradées","Internet insuffisant","Outils industriels anciens"]},
+{ id:10, name:"ODD 10 – Inégalités", situations:["Discrimination à l’emploi","Accès limité au logement","Exclusion sociale"]},
+{ id:11, name:"ODD 11 – Villes durables", situations:["Logements insalubres","Air pollué","Manque d’espaces verts"]},
+{ id:12, name:"ODD 12 – Consommation", situations:["Gaspillage alimentaire","Produits jetables","Surconsommation"]},
+{ id:13, name:"ODD 13 – Climat", situations:["Canicules répétées","Inondations","Manque de prévention"]},
+{ id:14, name:"ODD 14 – Vie marine", situations:["Plastiques en mer","Surpêche","Espèces marines menacées"]},
+{ id:15, name:"ODD 15 – Vie terrestre", situations:["Déforestation","Disparition d’espèces","Sols dégradés"]},
+{ id:16, name:"ODD 16 – Paix", situations:["Corruption","Accès limité à la justice","Violences"]},
+{ id:17, name:"ODD 17 – Partenariats", situations:["Manque de coopération","Aide internationale insuffisante","Peu de partage de ressources"]}
+];
+
+let correctCount = 0;
+const colLeft = document.getElementById('col-left');
+const colRight = document.getElementById('col-right');
+const pool = document.getElementById('situations-pool');
+
+data.forEach((odd, index) => {
+    const zone = document.createElement('div');
+    zone.className = 'odd-drop-zone';
+    zone.dataset.id = odd.id;
+    zone.innerHTML = `<div class="odd-title">${odd.name}</div>`;
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', handleDrop);
+    index < 8 ? colLeft.appendChild(zone) : colRight.appendChild(zone);
+});
+
+let allSituations = [];
+data.forEach(o => o.situations.forEach(t => allSituations.push({text:t, oddId:o.id})));
+allSituations.sort(() => Math.random() - 0.5);
+
+allSituations.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'situation';
+    el.draggable = true;
+    el.textContent = s.text;
+    el.id = 'sit-'+i;
+    el.dataset.oddId = s.oddId;
+    el.addEventListener('dragstart', e => e.dataTransfer.setData('text', el.id));
+    pool.appendChild(el);
+});
+
+function handleDrop(e){
+    const id = e.dataTransfer.getData('text');
+    const el = document.getElementById(id);
+    if(el.dataset.oddId === this.dataset.id){
+        this.appendChild(el);
+        el.classList.add('correct');
+        el.draggable = false;
+        correctCount++;
+        if(correctCount === 51) document.getElementById('win-screen').style.display='block';
+    }
+}
+
+document.getElementById('help-btn').onclick = () => document.getElementById('help-modal').style.display='block';
+function closeHelp(){ document.getElementById('help-modal').style.display='none'; }
+</script>
+
+</body>
+</html>
